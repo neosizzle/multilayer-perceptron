@@ -1,0 +1,49 @@
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO Train and test dataset read
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO Train and test dataset normalized
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO Train and test dataset standatdized
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO Perceptron initialized
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO Training begin
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO .........run_activation layer 0 @ 8611161 .......
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO 
+	weight
+[[ 0.12573022 -0.13210486]]
+	lhs
+	[[-0.87049615]
+ [-0.48303284]]
+	bias
+[[0.]]
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO col_scalar [-0.045636686049936676] x_values [[-0.04563669]] mean : -0.045636686049936676
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO rhs
+[[0.48859281]]
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO .........run_activation layer 1 @ 8611161 .......
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO 
+	weight
+[[ 0.12573022]
+ [-0.13210486]]
+	lhs
+	[[0.48859281]]
+	bias
+[[0.]
+ [0.]]
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO col_scalar [0.06143088180449975, -0.06454548613749314] x_values [[ 0.06143088]
+ [-0.06454549]] mean : -0.001557302166496695
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] INFO rhs
+[[0.53145251]
+ [0.46854749]], truth : [[1]
+ [0]]
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] ERROR begin_train: math domain error
+2024-06-09 19:12:07 jun-Latitude-5430 root[484831] ERROR Traceback (most recent call last):
+  File "/home/jun/42kl/multilayer_perceptron/train/train.py", line 80, in main
+    perceptron.begin_train()
+  File "/home/jun/42kl/multilayer_perceptron/train/ft_perception.py", line 104, in begin_train
+    example_loss = self.feed_forward_and_backprop(data, self.train_truth[data_idx], data_idx)
+  File "/home/jun/42kl/multilayer_perceptron/train/ft_perception.py", line 291, in feed_forward_and_backprop
+    self.backprop(last_layer_error, truth, last_layer_activation)
+  File "/home/jun/42kl/multilayer_perceptron/train/ft_perception.py", line 231, in backprop
+    weight_derivative = ft_math.dcost_dweight_hidden(
+  File "/home/jun/42kl/multilayer_perceptron/train/ft_math.py", line 189, in dcost_dweight_hidden
+    da_dz = sigmoid_deriv(sigmoid_reverse(lhs_activation))
+  File "/home/jun/42kl/multilayer_perceptron/train/ft_math.py", line 13, in sigmoid_reverse
+    return math.log(z / (1 - z))
+ValueError: math domain error
+
