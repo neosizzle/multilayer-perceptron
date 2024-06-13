@@ -83,12 +83,10 @@ def dcost_dw_output_np(dcost_dz, activation_lhs):
 	return dcost_dz.dot(activation_lhs.T)
 
 # https://towardsdatascience.com/deriving-the-backpropagation-equations-from-scratch-part-1-343b300c585a
-# partial derivation of cost function loss against input activation of output layer
-# dcost / da(lhs) = dz/da(lhs) = 1 * dc/dz
-# a(lhs) = activation value for the previous layer
-# z = pre-activated input for node at last layer
+# partial derivation of cost function against the bias of a hidden layer
+# dc/dw = dc/dz * dz/db -> 1
 def dcost_db_output_np(dcost_dz):
-	return dcost_dz * 1
+	return np.sum(dcost_dz * 1)
 
 # https://towardsdatascience.com/deriving-the-backpropagation-equations-from-scratch-part-1-343b300c585a
 # partial derivation of cost function against the unactivated output of a hidden layer
@@ -106,7 +104,21 @@ def dcost_dw_hidden_np(dcost_dz, activation_lhs):
 # partial derivation of cost function against the bias of a hidden layer
 # dc/dw = dc/dz * dz/db -> 1
 def dcost_db_hidden_np(dcost_dz):
-	return dcost_dz * 1
+	return np.sum(dcost_dz * 1)
+
+def get_accuracy(predicted, actual):
+	if predicted.shape != actual.shape:
+		raise ValueError("predicted and actual shape is not equal")
+	total_elements = predicted.size
+	correct_elements = 0
+	for row_idx, row in enumerate(predicted):
+		for col_idx, col in enumerate(row):
+			actual_elem = actual[row_idx][col_idx]
+			if actual_elem == 1 and col >= 0.5:
+				correct_elements += 1
+			if actual_elem == 0 and col < 0.5:
+				correct_elements += 1
+	return correct_elements / total_elements
 
 ###### NUMPY UTILS #######
 def single_column_to_scalar(np_arr):

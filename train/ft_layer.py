@@ -57,7 +57,7 @@ class Ft_layer:
 
 	# runs activation functions for current layer, and sets the next layers activation function output
 	def run_activation(self):
-		x_values = np.add(np.matmul(self.weights, self.lhs_activation), self.bias)
+		x_values = np.add(np.dot(self.weights, self.lhs_activation), self.bias)
 		activated_output = None
 		if self.activation_fn == "softplus":
 			activated_output = np.array(ft_math.softplus(x_values))
