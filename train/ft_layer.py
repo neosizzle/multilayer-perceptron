@@ -54,28 +54,22 @@ class Ft_layer:
 		# NOTE: This is a np.array
 		self.pending_bias_derivatives = np.zeros(self.bias.shape)
 
-		# This is to store the softmax output for output layers
-		# NOTE: This is a np.array
-		self.softmax_output = None
 
 	# runs activation functions for current layer, and sets the next layers activation function output
 	def run_activation(self):
 		x_values = np.add(np.matmul(self.weights, self.lhs_activation), self.bias)
-		col_scalar = ft_math.single_column_to_scalar(x_values)
-		activated_output = []
-		# NOTE: x_values goes big here and col_scalar sums to 0
-		# logging.info(f"col_scalar {col_scalar} x_values {x_values} mean : {ft_math.mean(col_scalar)}")
+		activated_output = None
 		if self.activation_fn == "softplus":
-			for x_value in col_scalar:
-				activated_output.append(ft_math.softplus(x_value))
-		if self.activation_fn == "sigmoid":
-			for x_value in col_scalar:
-				activated_output.append(ft_math.sigmoid(x_value))
-		if activated_output == []:
+			activated_output = np.array(ft_math.softplus(x_values))
+		elif self.activation_fn == "sigmoid":
+			activated_output = np.array(ft_math.sigmoid(x_values))
+		elif self.activation_fn == "softmax":
+			if self.type != "output":
+				raise ValueError("Layer is not output type but softmax is requested")
+			activated_output = np.array(ft_math.softmax(x_values))
+		else :
 			raise ValueError(f"Invalid activation function {self.activation_fn}")
-
-		new_rhs = ft_math.scalar_to_single_column(activated_output)
 		# logging.info(f"\n\tweight\n{self.weights}\n\tlhs\n\t{self.lhs_activation}\n\tbias\n{self.bias}\n\tx_values\n{x_values}\n\trhs\n{new_rhs}")
-		self.rhs_activation = new_rhs
+		self.rhs_activation = activated_output
 		
 		# logging.info(f"\n{self.weights}\n*\n{self.lhs_activation}\n+\n{self.bias}\n=\n{new_rhs}")

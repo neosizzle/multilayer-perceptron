@@ -32,7 +32,7 @@ class Ft_perceptron:
 			type="input",
 			node_count_lhs=len(self.enum_models),
 			node_count_rhs=hidden_layers[0],
-			seed=1323
+			seed=132
 		))
 
 		# generate hidden layers
@@ -88,17 +88,30 @@ class Ft_perceptron:
 		# store historic data here?
 		logging.info("Perceptron initialized")
 
-	def begin_train_alt(self):
-		logging.info("Alt Training begin")
-
-		# fll input data
+	def generate_input_matrix(self, dataset):
+		# fill input data
 		inputs = []
 		for model in self.enum_models:
 			inputs.append([])
 
 		for idx,model in enumerate(self.enum_models):
 			feature_name = model["name"]
-			feature_value = self.dataset_train[0].get_feature(feature_name)
+			for entry in dataset:
+				feature_value = entry.get_feature(feature_name)
+				inputs[idx].append(feature_value)
+
+		return np.array(inputs)
+
+	def begin_train_alt(self):
+		logging.info("Alt Training begin")
+
+		# fill input data
+		inputs = []
+		for model in self.enum_models:
+			inputs.append([])
+
+		for idx,model in enumerate(self.enum_models):
+			feature_name = model["name"]
 			for entry in self.dataset_train:
 				feature_value = entry.get_feature(feature_name)
 				inputs[idx].append(feature_value)
@@ -132,7 +145,7 @@ class Ft_perceptron:
 			# logging.info(a2)
 			# bw prop
 
-			# this is straight up error function??? no. this is softmax derivatinve wrt its input
+			# this is straight up error function??? no. this is softmax derivatinve wrt its input with bonary cross entropy included
 			# dz2 = a2 - truth
 			dz2 = ft_math.dcost_dz_output_np(a2, truth)
 			# logging.info(f"\ndz2_theirs\n{dz2}\ndz2_mine\n{ft_math.dcost_dz_output_np(a2, truth)}\npredicted\n{np.array(a2)}\ntruth {truth}")
@@ -152,6 +165,7 @@ class Ft_perceptron:
 
 			# dz_dalhs * dc_da * da_dz
 			# dz1 = weights_hidden_to_output.T.dot(dz2) * ft_math.sigmoid_deriv(ft_math.sigmoid_reverse(a1))
+			# print(f"weights_hidden_to_output {weights_hidden_to_output.shape} dz2 {dz2.shape} a1 {a1.shape}")
 			dz1 = ft_math.dcost_dz_hidden_np(weights_hidden_to_output, dz2, a1)
 			# logging.info(f"dz1_theirs {dz1}, dz1_mine = {ft_math.dcost_dz_hidden_np(weights_hidden_to_output, dz2, a1)}, pred {np.array(a2)} truth {truth}")
 
@@ -161,7 +175,8 @@ class Ft_perceptron:
 			db1 = np.sum(dz1)
 			# db1 = dz1
 
-			logging.info(f"\npredicted\n{a2},\ntruth\n{truth}")
+			# logging.info(f"\npredicted\n{a2},\ntruth\n{truth}")
+			
 			
 			self.layers[0].weights = self.layers[0].weights - learning_rate * dw1
 			self.layers[0].bias = self.layers[0].bias - learning_rate * db1
@@ -170,59 +185,34 @@ class Ft_perceptron:
 
 	def begin_train(self):
 		logging.info("Training begin")
-		# run procedure function epoch_count times
+		self.layers[0].lhs_activation = self.generate_input_matrix(self.dataset_train)
+		truth = self.train_truth
+
 		for i in range(self.epoch_count):
 
 			# TODO: implement Recall metric alongside loss
-			epoch_loss = [0] * len(ft_model.DIAGNOSIS)
-
 			# TODO batch GD here?
-			for data_idx, data in enumerate(self.dataset_train):
-				# for each entry, call feed_forward and store predictions
-				# assume length of train set is = to the length of truth because they 
-				# are derived from same csv
-				example_loss = self.feed_forward_and_backprop(data, self.train_truth[data_idx], data_idx)
 
-				# append loss to entropy losses
-				for idx, loss in enumerate(example_loss) :
-					epoch_loss[idx] += loss
-				
-				# TODO: remove testing code 
-				# break
+			# forwardfeed and backpropagate
+			last_layer_error = self.feed_forward_and_backprop(truth)
 
-			# TODO store visualize data here (along with test data)? 
-
-			# apply weight and bias changes
+			# apply weight changes
 			self.apply_derivatives_reset_cache()
-			total_loss = None
-			if self.output_loss_type == "binaryCrossEntropy":
-				total_loss = sum(epoch_loss) * (-1 * (1 / len(self.dataset_train)))
-			else:
-				total_loss = sum(epoch_loss) / len(self.dataset_train)
-			logging.info(f"Epoch {i} finished; train loss {total_loss}, validation loss TODO")
 
-	def feed_forward(self, data, data_idx):
-		# iterate through all layers
-		for layer_idx, layer in enumerate(self.layers):
-			# if the current layer is the first layer, set the 
-			# lhs activations to input entry
-			if layer.type == "input" :
-				inputs = []
-				for model in self.enum_models:
-					feature_name = model["name"]
-					feature_value = data.get_feature(feature_name)
-					inputs.append([feature_value])
-				layer.lhs_activation = np.array(inputs)
-			else :
-				prev_rhs = self.layers[layer_idx - 1].rhs_activation
-				if prev_rhs is None:
-					raise ValueError("Fill forward previous rhs is none")
-				layer.lhs_activation = prev_rhs
-			
+			logging.info(f"Epoch {i} finished; train loss {np.abs(np.mean(last_layer_error))}, validation loss TODO")
+
+
+	def feed_forward(self):
+		# iterate through all layers (assume input layer LHS is already set)
+		for layer_idx, layer in enumerate(self.layers):			
 			# run activation function, this would populate the current layer.rhs
 			# logging.info(f".........run_activation layer {layer_idx} @ {data.get_feature('Id')} .......")
 			# logging.info(f"\n\tweight\n{layer.weights}\n\tlhs\n\t{layer.lhs_activation}\n\tbias\n{layer.bias}")
 			layer.run_activation()
+
+			# set next layer lhs depends on current layer type
+			if layer.type != "output":
+				self.layers[layer_idx + 1].lhs_activation = layer.rhs_activation
 			# if layer.type == "output":
 			# 	logging.info(f"rhs\n{layer.rhs_activation}, truth : {self.train_truth[data_idx]}")
 			# else:
@@ -232,135 +222,52 @@ class Ft_perceptron:
 		last_layer_activation = self.layers[-1].rhs_activation
 		return last_layer_activation
 
-	def backprop(self, last_layer_entropy, truth, last_layer_activation):
-		# set curr_loss at last layer and start backprop
-		curr_loss = last_layer_entropy
+	def backprop(self, truth):
+		# this value will change to store the current layers dz value
+		# for the previous layer to access
+		last_dz = None
+
+		# this value will change to store the current layers weights
+		# for the previous layer to access
+		last_layer_weights = None
 
 		for idx, layer in enumerate(reversed(self.layers)):
-			# TODO: remove test code
-			# if len(self.layers) - 1 - idx != 3:
-			# 	continue
-			# logging.info(f".........run backprop layer {len(self.layers) - 1 - idx}.......")
-			weight_deriv_matrix = np.empty(layer.weights.shape)
-			bias_deriv_matrix = np.empty(layer.bias.shape)
-			layer.rhs_loss = curr_loss.copy()
-			next_loss = [0] * len(layer.lhs_activation)
-			# NOTE: row_idx corresponds to rhs nodes, and col idx corresponds to lhs nodes.
-			for row_idx, row in enumerate(layer.weights):
-				for col_idx, col in enumerate(row):
-					# logging.info(f"processing [{row_idx}][{col_idx}] {layer.lhs_activation}")
-					loss_type = self.output_loss_type
-					activation_type = layer.activation_fn
-					lhs_activation = layer.lhs_activation[col_idx][0]
-					# need to add a pseudo activation for input layer here
-					# because ft_math assumes all input is validated activation
-					# but our csv had input 0, which is not valid to do reverse softmax.
-					# if layer.type == "input":
-					# 	if activation_type == "sigmoid":
-					# 		lhs_activation = ft_math.sigmoid(lhs_activation)
-					# 	elif activation_type == "softplus":
-					# 		lhs_activation = ft_math.softplus(lhs_activation)
-					# 	else:
-					# 		raise ValueError("Invalid activation type for input layer found in backprop")
+			# logging.info(f"running backprop for layer {layer.type} @ {idx}")
+			if layer.type == "output":
+				dz = ft_math.dcost_dz_output_np(layer.rhs_activation, truth)
+				dw = ft_math.dcost_dw_output_np(dz, layer.lhs_activation)
+				db = ft_math.dcost_db_output_np(dz)
+				layer.pending_weights_derivatives = dw
+				layer.pending_bias_derivatives = db
+				last_dz = dz
+				last_layer_weights = layer.weights
+			else :
+				# logging.info(f"weights_hidden_to_output {last_layer_weights.shape} dz2 {last_dz.shape} a1 {layer.rhs_activation.shape}")
+				dz = ft_math.dcost_dz_hidden_np(last_layer_weights, last_dz, layer.rhs_activation)
+				dw = ft_math.dcost_dw_hidden_np(dz, layer.lhs_activation)
+				db = dz
+				layer.pending_weights_derivatives = dw
+				layer.pending_bias_derivatives = db
+				last_dz = dz
+				last_layer_weights = layer.weights
 
-					prev_softmax_value = None
-					if layer.last_softmax_input is not None:
-						prev_softmax_value = layer.last_softmax_input[row_idx][0]
-					weight = col
-
-					# logging.info(f"procesising {entry.get_feature('Id')} [{row_idx}][{col_idx}] = {col}.")
-					if layer.type == "output":
-						predicted = last_layer_activation[row_idx][0]
-						true_value = truth[row_idx][0]
-						weight_derivative = ft_math.dcost_dweight_output(
-							loss_type,
-							activation_type,
-							predicted,
-							true_value,
-							lhs_activation,
-							prev_softmax_value,
-						)
-						bias_derivative = ft_math.dcost_dbias_output(
-							loss_type,
-							activation_type,
-							predicted,
-							true_value,
-							lhs_activation,
-							prev_softmax_value,
-						)
-						next_loss_derivative = ft_math.dcost_dalhs_output(
-							loss_type,
-							activation_type,
-							predicted,
-							true_value,
-							lhs_activation,
-							weight,
-							prev_softmax_value,
-						)
-						# logging.info(f"out - [{row_idx}][{col_idx}] weight_derivative {weight_derivative} @ {layer.weights[row_idx][col_idx]}, bias_derivative {bias_derivative}, next_loss_derivative {next_loss_derivative}, pred {predicted}, true {true_value}")
-						# logging.info(f"{idx} adding {weight_derivative} to [{row_idx}][{col_idx}]")
-						weight_deriv_matrix[row_idx][col_idx] = weight_derivative				
-						bias_deriv_matrix[row_idx][0] = bias_derivative
-						next_loss[col_idx] += next_loss_derivative
-						# logging.info(f"......{predicted} {true_value} - [{row_idx}][{col_idx}]......")
-					else:
-						rhs_deriv_cost = layer.rhs_loss[row_idx]
-						# logging.info(f"rhs_deriv_cost {rhs_deriv_cost}")
-						# if idx == 3:
-						# 	logging.info(f"{idx} act: {activation_type}, lhs: {lhs_activation}, rhs_cost: {rhs_deriv_cost}, prev_sm: {prev_softmax_value}")
-						weight_derivative = ft_math.dcost_dweight_hidden(
-							activation_type,
-							lhs_activation,
-							rhs_deriv_cost,
-							prev_softmax_value
-						)
-						bias_derivative = ft_math.dcost_dbias_hidden(
-							activation_type,
-							lhs_activation,
-							rhs_deriv_cost,
-							prev_softmax_value
-						)
-						next_loss_derivative = ft_math.dcost_dalhs_hidden(
-							activation_type,
-							lhs_activation,
-							rhs_deriv_cost,
-							weight,
-							prev_softmax_value
-						)
-						# logging.info(f"\n\tlhs idx {col_idx}\n\trhs idx {row_idx} \n\trhs_deriv_cost {rhs_deriv_cost}\n\tlhs_activation {lhs_activation}\n\tprev_softmax_value {prev_softmax_value}\n\tweight_derivative {weight_derivative}\n\tbias_derivative {bias_derivative}")
-						# logging.info(f"hidden - [{row_idx}][{col_idx}] weight_derivative {weight_derivative} @ {layer.weights[row_idx][col_idx]}, bias_derivative {bias_derivative}, next_loss_derivative {next_loss_derivative}, pred {predicted}, true {true_value}")
-						# if idx == 3:
-						# logging.info(f"{idx} adding {weight_derivative} to [{row_idx}][{col_idx}]")
-						weight_deriv_matrix[row_idx][col_idx] = weight_derivative				
-						bias_deriv_matrix[row_idx][0] = bias_derivative
-						next_loss[col_idx] += next_loss_derivative
-			
-			curr_loss = next_loss
-			layer.pending_weights_derivatives += weight_deriv_matrix
-			# logging.info(f"{len(self.layers) - 1 - idx} bp layer.weight_deriv_matrix \n{weight_deriv_matrix}")
-			# logging.info(f"{len(self.layers) - 1 - idx} bp next_loss {next_loss}")
-			# logging.info(f"{len(self.layers) - 1 - idx} bp layer.pending_weights_derivatives after add \n{layer.pending_weights_derivatives}")
-			layer.pending_bias_derivatives += bias_deriv_matrix
 
 	# feeds forward and backpropagates for 1 example, appending the required changes in the
 	# layers themselves
-	def feed_forward_and_backprop(self, entry, truth, data_idx):
+	def feed_forward_and_backprop(self, truth):
 		# run feed forward as usual
-		last_layer_activation = self.feed_forward(entry, data_idx)
-
-		# NOTE: HARDCODED CROSS ENTROPY
-		# NOTE: sometimes activation is 1 here
+		last_layer_activation = self.feed_forward()
 		# logging.info(f"activation {ft_math.single_columADD this n_to_scalar(last_layer_activation)} truth {ft_math.single_column_to_scalar(truth)}")
 		last_layer_error = None
 		if self.output_loss_type == "binaryCrossEntropy":
 			last_layer_error = ft_math.binary_cross_entropy(
-						ft_math.single_column_to_scalar(last_layer_activation),
-						ft_math.single_column_to_scalar(truth)
+						last_layer_activation,
+						truth
 						)
 		elif self.output_loss_type == "MSE":
 			last_layer_error = ft_math.squared_err(
-						ft_math.single_column_to_scalar(last_layer_activation),
-						ft_math.single_column_to_scalar(truth)
+						last_layer_activation,
+						truth
 						)
 		else:
 			raise ValueError("Invalid loss detected in feed_forward_and_backprop")
@@ -368,32 +275,15 @@ class Ft_perceptron:
 		# logging.info(f"raw entropy for entry {entry.get_feature('Id')} : {last_layer_entropy}")
 
 		# run back propagation to get derivatives for all weights and biases
-		self.backprop(last_layer_error, truth, last_layer_activation)
+		self.backprop(truth)
 		return last_layer_error
 
 	def apply_derivatives_reset_cache(self):
 		for idx, layer in enumerate(self.layers):
-			# TODO: remove testing code
-			# if idx != 3:
-			# 	continue
-			if layer.weights.shape != layer.pending_weights_derivatives.shape:
-				raise ValueError("Weight derivatives dimensions dot not match value dimensions")
-			if layer.bias.shape != layer.pending_bias_derivatives.shape:
-				raise ValueError("Bias derivatives dimensions dot not match value dimensions")
-			
-			# apply changes to weights
-			# logging.info(f"{idx} layer.weights before \n{layer.weights}")
-			# logging.info(f"{idx} layer.pending_weights_derivatives \n{layer.pending_weights_derivatives}")
-			stepsize_matrix = layer.pending_weights_derivatives * self.learning_rate
-			layer.weights = layer.weights - stepsize_matrix
-			logging.info(f"{idx} layer.weights stepsizes \n{stepsize_matrix}")
-			# logging.info(f"{idx} layer.weights now \n{layer.weights}")
-			
-			# TODO ADD this back in
-			# apply changes to biases
-			# stepsize_matrix = layer.pending_bias_derivatives * self.learning_rate
-			# layer.bias = layer.bias - stepsize_matrix
+			# logging.info(f" layer.weights { layer.weights.shape} ayer.pending_weights_derivatives {layer.pending_weights_derivatives.shape}")
 
+			layer.weights = layer.weights - self.learning_rate * layer.pending_weights_derivatives
+			layer.bias = layer.bias - self.learning_rate * layer.pending_bias_derivatives
 			# clear cache matrix
 			layer.pending_weights_derivatives = np.zeros(layer.weights.shape)
 			layer.pending_bias_derivatives = np.zeros(layer.bias.shape)

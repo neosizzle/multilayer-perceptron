@@ -26,8 +26,8 @@ def divide_with_random_idx(data, indices):
 def seperate_and_write_data(raw_data, destination) :
 	mal_entries = [x for x in raw_data if x.get_feature("Diagnosis") == "M"]
 	ben_entries = [x for x in raw_data if x.get_feature("Diagnosis") == "B"]
-	mal_count_new = len(mal_entries) // 2
-	ben_count_new = len(ben_entries) // 2
+	mal_count_new = int(len(mal_entries) * 0.3)
+	ben_count_new = int(len(ben_entries) * 0.3)
 	mal_indices = random.sample(range(0, len(mal_entries)), mal_count_new)
 	ben_indices = random.sample(range(0, len(ben_entries)), ben_count_new)
 
