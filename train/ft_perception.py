@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.abspath('ft_model'))
 import numpy as np
 import logging
 import ft_model, ft_layer, ft_math
+import random
 
 class Ft_perceptron:
 	def __init__(self,
@@ -185,23 +186,40 @@ class Ft_perceptron:
 
 	def begin_train(self):
 		logging.info("Training begin")
-		truth = self.train_truth
+		truth_train = self.train_truth
 		truth_test = self.test_truth
 
+		random.seed(69)
 		for i in range(self.epoch_count):
 
 			# TODO: implement Recall metric alongside loss
-			# TODO batch GD here?
+			# generate batch randomly based on batch size
+			indices = None
+			if self.batch_size < 0:
+				indices = range(0, len(self.dataset_train))
+			else :
+				indices = random.sample(population=range(0, len(self.dataset_train)), k=self.batch_size)
+			train_batches = list(map(lambda x: self.dataset_train[x], indices))
+			logging.debug(f"mini-batch indices {indices}")
+			
+			truth_batch_scalar = []
+			for col_idx, col in enumerate(truth_train[0]):
+				if col_idx not in indices:
+					continue
+				truth_1 = self.train_truth[0][col_idx]
+				truth_2 = self.train_truth[1][col_idx]
+				truth_batch_scalar.append([truth_1, truth_2])
+			train_batch_truths = np.array(truth_batch_scalar).T
 
 			# forwardfeed and backpropagate
-			self.layers[0].lhs_activation = self.generate_input_matrix(self.dataset_train)
-			last_layer_error_train = self.feed_forward_and_backprop_train(truth)
-			accuracy_train = ft_math.get_accuracy(self.layers[-1].rhs_activation, self.train_truth)
+			self.layers[0].lhs_activation = self.generate_input_matrix(train_batches)
+			last_layer_error_train = self.feed_forward_and_backprop_train(train_batch_truths)
+			accuracy_train = ft_math.get_accuracy(self.layers[-1].rhs_activation, train_batch_truths)
 
 			# # forwardfeed and backpropagate test set
 			self.layers[0].lhs_activation = self.generate_input_matrix(self.dataset_test)
 			last_layer_error_test = self.feed_forward_test(truth_test)
-			accuracy_test = ft_math.get_accuracy(self.layers[-1].rhs_activation, self.test_truth)
+			accuracy_test = ft_math.get_accuracy(self.layers[-1].rhs_activation, truth_test)
 			# last_layer_error_test = last_layer_error_train
 			# accuracy_test = accuracy_train
 

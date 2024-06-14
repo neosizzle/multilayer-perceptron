@@ -16,7 +16,7 @@ def get_args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-v', '--verbose', action='store_true')
 	# TODO: make sure hidden laters >= 3
-	parser.add_argument('-l', '--layer', help="Speficy number of nodes for each layer", nargs='*', type=int, default=[13, 13, 13])
+	parser.add_argument('-l', '--layer', help="Speficy number of nodes for each layer", nargs='*', type=int, default=[10, 10, 10])
 	parser.add_argument('-e', '--epochs', help="Speficy number of Epochs to run", type=int, default=10)
 	# parser.add_argument('-l', '--layer', help="Speficy number of nodes for each layer", nargs='*', type=int, default=[24, 24, 24])
 	# parser.add_argument('-e', '--epochs', help="Speficy number of Epochs to run", type=int, default=84)
