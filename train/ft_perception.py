@@ -17,7 +17,9 @@ class Ft_perceptron:
 			  learning_rate,
 			  dataset_train,
 			  dataset_test,
-			  momentum_decay = 0.5
+			  momentum_decay = 0.5,
+			  rmsprop_ratio = 0.999,
+			  rmsprop_stabilizer = 10 ** -8,
 			  ):
 		self.epoch_count = epoch_count
 		self.output_loss_type = output_loss_type
@@ -27,6 +29,8 @@ class Ft_perceptron:
 		self.dataset_test = dataset_test
 		self.enum_models = ft_model.get_enumerable_models()
 		self.momentum_decay = momentum_decay
+		self.rmsprop_ratio = rmsprop_ratio
+		self.rmsprop_stabilizer = rmsprop_stabilizer
 
 		self.layers = []
 		
@@ -320,22 +324,24 @@ class Ft_perceptron:
 
 	def apply_derivatives_reset_cache(self):
 		for idx, layer in enumerate(self.layers):
-			# logging.info(f" layer.weights { layer.weights.shape} ayer.pending_weights_derivatives {layer.pending_weights_derivatives.shape}")
-			step_size_weights = self.learning_rate * layer.pending_weights_derivatives
-			step_size_bias = self.learning_rate * layer.pending_bias_derivatives
-			logging.debug(f"[apply_derivatives_reset_cache]\n{layer.type} layer {idx} step_size_weights\n{step_size_weights.shape}\nstep_size_bias\n{layer.bias.shape}\n")
+			# apply rmsprop
+			new_s_dw = (self.rmsprop_ratio * layer.s_weights) + ((1 - self.rmsprop_ratio) * np.square(layer.pending_weights_derivatives))
+			rms_w_derivatives = layer.pending_weights_derivatives / np.sqrt(new_s_dw + self.rmsprop_stabilizer)
+			layer.s_weights = new_s_dw
+
+			new_s_db = (self.rmsprop_ratio * layer.s_bias) + ((1 - self.rmsprop_ratio) * np.square(layer.pending_bias_derivatives))
+			rms_b_derivatives = layer.pending_bias_derivatives / np.sqrt(new_s_db + self.rmsprop_stabilizer)
+			layer.s_bias = new_s_db
 
 			# apply momentum
-			new_weights_velocity = self.momentum_decay * layer.weights_velocity - (self.learning_rate * layer.pending_weights_derivatives)
+			new_weights_velocity = self.momentum_decay * layer.weights_velocity - (self.learning_rate * rms_w_derivatives)
 			layer.weights_velocity = new_weights_velocity
 
-			new_bias_velocity = self.momentum_decay * layer.bias_velocity - (self.learning_rate * layer.pending_bias_derivatives)
+			new_bias_velocity = self.momentum_decay * layer.bias_velocity - (self.learning_rate * rms_b_derivatives)
 			layer.bias_velocity = new_bias_velocity
 
 			layer.weights = layer.weights + new_weights_velocity
-			# layer.weights = layer.weights - step_size_weights
-			# layer.bias = layer.bias + new_bias_velocity
-			layer.bias = layer.bias - step_size_bias
+			layer.bias = layer.bias + new_bias_velocity
 
 			# clear cache matrix
 			layer.pending_weights_derivatives = np.zeros(layer.weights.shape)

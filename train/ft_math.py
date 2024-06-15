@@ -1,7 +1,9 @@
 import math
 import numpy as np
+import warnings
 
 # np.seterr(divide='ignore')
+warnings.filterwarnings('ignore')
 
 def mean(values) :
 	return sum(values) / len(values)

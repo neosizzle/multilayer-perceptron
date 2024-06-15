@@ -58,6 +58,14 @@ class Ft_layer:
 		# NOTE: This is a np.array
 		self.bias_velocity = np.zeros(self.bias.shape)
 
+		# This is to store the previous squared weight derivatives for RMS propagation 
+		# NOTE: This is a np.array
+		self.s_weights = np.zeros(self.weights.shape)
+
+		# This is to store the previous squared bias derivatives for RMS propagation 
+		# NOTE: This is a np.array
+		self.s_bias = np.zeros(self.bias.shape)
+
 		# This is to store the projected weight derivatives for momentum calculation 
 		# NOTE: This is a np.array
 		# self.projected_weights_derivatives = np.zeros(self.weights.shape)
