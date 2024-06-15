@@ -260,21 +260,6 @@ class Ft_perceptron:
 				dz = ft_math.dcost_dz_output_np(layer.rhs_activation, truth)
 				dw = ft_math.dcost_dw_output_np(dz, layer.lhs_activation)
 				db = ft_math.dcost_db_output_np(dz)
-
-				# # nestrov acceeration here ..
-				# # initialize velocity if its not
-				# if layer.weights_velocity is None :
-				# 	layer.weights_velocity = np.zeros(layer.weights.shape)
-
-				# # project the weight using velocity first and get the gradient
-				# projection_weight = layer.weights + (self.momentum_decay * layer.weights_velocity)
-				# projection_weight_gradient = dw
-				
-				# # after we know the gradient of point after projection
-				# # we calculate our new velocity
-				# logging.info(f"{layer_idx} pweight {projection_weight_gradient.shape}")
-				# layer.projected_weights_derivatives = projection_weight_gradient
-
 				layer.pending_weights_derivatives = dw
 				layer.pending_bias_derivatives = db
 				last_dz = dz
@@ -285,27 +270,6 @@ class Ft_perceptron:
 				dz = ft_math.dcost_dz_hidden_np(last_layer_weights, last_dz, layer.rhs_activation)
 				dw = ft_math.dcost_dw_hidden_np(dz, layer.lhs_activation)
 				db = ft_math.dcost_db_hidden_np(dz)
-				
-				# nestrov acceeration here ..
-				# initialize velocity if its not
-				if layer.weights_velocity is None :
-					layer.weights_velocity = np.zeros(layer.weights.shape)
-
-				# TODO: assume gradient constant?
-				# project the weight using velocity first and get the gradient
-				# projection_weight = last_layer_weights + (self.momentum_decay * layer.weights_velocity)
-				# projection_weight_gradient = ft_math.dcost_dw_hidden_np(
-				# 	ft_math.dcost_dz_hidden_np(
-				# 		projection_weight, last_dz, layer.rhs_activation
-				# 		)
-				# 	, layer.lhs_activation
-				# 	)
-				
-				# after we know the gradient of point after projection
-				# we calculate our new velocity
-				logging.info(f"{layer_idx} cweight {layer.weights_velocity.shape} pweight {projection_weight_gradient.shape} dw {dw.shape} weights {layer.weights.shape}")
-				layer.projected_weights_derivatives = projection_weight_gradient
-
 				layer.pending_weights_derivatives = dw
 				layer.pending_bias_derivatives = db
 				last_dz = dz
@@ -361,13 +325,16 @@ class Ft_perceptron:
 			step_size_bias = self.learning_rate * layer.pending_bias_derivatives
 			logging.debug(f"[apply_derivatives_reset_cache]\n{layer.type} layer {idx} step_size_weights\n{step_size_weights.shape}\nstep_size_bias\n{layer.bias.shape}\n")
 
-			# # apply nestrov acceleration
-			# logging.info(f"haha {layer.weights_velocity.shape} {layer.projected_weights_derivatives.shape}")
-			# new_weights_velocity = self.momentum_decay * layer.weights_velocity - (self.learning_rate * layer.projected_weights_derivatives)
-			# layer.weights_velocity = new_weights_velocity
+			# apply momentum
+			new_weights_velocity = self.momentum_decay * layer.weights_velocity - (self.learning_rate * layer.pending_weights_derivatives)
+			layer.weights_velocity = new_weights_velocity
 
-			# layer.weights = layer.weights + new_weights_velocity
-			layer.weights = layer.weights - step_size_weights
+			new_bias_velocity = self.momentum_decay * layer.bias_velocity - (self.learning_rate * layer.pending_bias_derivatives)
+			layer.bias_velocity = new_bias_velocity
+
+			layer.weights = layer.weights + new_weights_velocity
+			# layer.weights = layer.weights - step_size_weights
+			# layer.bias = layer.bias + new_bias_velocity
 			layer.bias = layer.bias - step_size_bias
 
 			# clear cache matrix

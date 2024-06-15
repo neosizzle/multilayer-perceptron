@@ -50,17 +50,17 @@ class Ft_layer:
 		# NOTE: This is a np.array
 		self.pending_bias_derivatives = np.zeros(self.bias.shape)
 
-		# This is to store the previous weight derivatives for nestrov acceleration calculation 
+		# This is to store the previous weight derivatives for momentum calculation 
 		# NOTE: This is a np.array
-		self.weights_velocity = None
+		self.weights_velocity = np.zeros(self.weights.shape)
 
-		# This is to store the previous bias derivatives for nestrov acceleration calculation 
+		# This is to store the previous bias derivatives for momentum calculation 
 		# NOTE: This is a np.array
-		self.bias_velocity = None
+		self.bias_velocity = np.zeros(self.bias.shape)
 
-		# This is to store the projected weight derivatives for nestrov acceleration calculation 
+		# This is to store the projected weight derivatives for momentum calculation 
 		# NOTE: This is a np.array
-		self.projected_weights_derivatives = np.zeros(self.weights.shape)
+		# self.projected_weights_derivatives = np.zeros(self.weights.shape)
 
 	# runs activation functions for current layer, and sets the next layers activation function output
 	def run_activation(self):
