@@ -37,10 +37,6 @@ class Ft_layer:
 		self.activation_fn = activation_fn
 		self.lhs_activation = None
 		self.rhs_activation = None
-		
-		# Stores 1 layer of softmax input for RHS only
-		# This is valid only if the activation value is softmax. Its needed because softmax is irreversible
-		self.last_softmax_input = None
 
 		# This is to store the loss values for RHS during back propagation 
 		# NOTE: This is a np.array
@@ -54,6 +50,17 @@ class Ft_layer:
 		# NOTE: This is a np.array
 		self.pending_bias_derivatives = np.zeros(self.bias.shape)
 
+		# This is to store the previous weight derivatives for nestrov acceleration calculation 
+		# NOTE: This is a np.array
+		self.weights_velocity = None
+
+		# This is to store the previous bias derivatives for nestrov acceleration calculation 
+		# NOTE: This is a np.array
+		self.bias_velocity = None
+
+		# This is to store the projected weight derivatives for nestrov acceleration calculation 
+		# NOTE: This is a np.array
+		self.projected_weights_derivatives = np.zeros(self.weights.shape)
 
 	# runs activation functions for current layer, and sets the next layers activation function output
 	def run_activation(self):
