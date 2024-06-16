@@ -191,13 +191,14 @@ class Ft_perceptron:
 			self.layers[1].bias = self.layers[1].bias - learning_rate * db2
 
 	def begin_train(self):
-		logging.info("Training begin")
 		truth_train = self.train_truth
 		truth_test = self.test_truth
+		warmup_threshold = 128 # how many epochs to run before we check for early stopping?
+		last_test_accuracy = 0
 
+		logging.info(f"Training begin with {warmup_threshold} early stop warmup epochs")
 		random.seed(69)
 		for i in range(self.epoch_count):
-
 			# TODO: implement Recall metric alongside loss
 			# generate batch randomly based on batch size
 			indices = None
@@ -226,14 +227,19 @@ class Ft_perceptron:
 			self.layers[0].lhs_activation = self.generate_input_matrix(self.dataset_test)
 			last_layer_error_test = self.feed_forward_test(truth_test)
 			accuracy_test = ft_math.get_accuracy(self.layers[-1].rhs_activation, truth_test)
-			# last_layer_error_test = last_layer_error_train
-			# accuracy_test = accuracy_train
 
-			# apply weight changesf
+			test_error = np.abs(np.mean(last_layer_error_test))
+			train_error = np.abs(np.mean(last_layer_error_train))
+			# check for early stopping
+			if i >= warmup_threshold :
+				if accuracy_test < last_test_accuracy:
+					logging.info(f"Epoch {i} finished; train loss {round(train_error, 3)}, validation loss {round(test_error, 3)} validation acc {accuracy_test} < {last_test_accuracy}, early stopping condition met, stopping.")
+					break
+				last_test_accuracy = accuracy_test
+
+			# apply weight changes
 			self.apply_derivatives_reset_cache()
-
-
-			logging.info(f"Epoch {i} finished; train loss {np.abs(np.mean(last_layer_error_train))}, validation loss {np.abs(np.mean(last_layer_error_test))}")
+			logging.info(f"Epoch {i} finished; train loss {round(train_error, 3)}, validation loss {round(test_error, 3)} validation acc {round(accuracy_test, 3)}")
 
 	def feed_forward(self):
 		# iterate through all layers (assume input layer LHS is already set)
