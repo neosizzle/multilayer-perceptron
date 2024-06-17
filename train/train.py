@@ -21,7 +21,7 @@ def get_args():
 	# parser.add_argument('-l', '--layer', help="Speficy number of nodes for each layer", nargs='*', type=int, default=[24, 24, 24])
 	# parser.add_argument('-e', '--epochs', help="Speficy number of Epochs to run", type=int, default=84)
 	parser.add_argument('-L', '--loss', help="Speficy type of loss function used at output layer", type=str, default='binaryCrossEntropy', choices=['binaryCrossEntropy', 'MSE'])
-	parser.add_argument('-b', '--batch_size', help="Speficy number of nodes in 1 batch for mini batch GD", type=int, default=8)
+	parser.add_argument('-b', '--batch_size', help="Speficy number of nodes in 1 batch for mini batch GD", type=int, default=-1)
 	parser.add_argument('-a', '--learning_rate', help="Speficy the learning rate for GD", type=float, default=0.0314)
 	parser.add_argument('train_dataset', nargs=1)
 	parser.add_argument('test_dataset', nargs=1)
