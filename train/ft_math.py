@@ -73,8 +73,23 @@ def mean_sqaured_err_deriv(predicted, actual):
 
 # https://towardsdatascience.com/derivative-of-the-softmax-function-and-the-categorical-cross-entropy-loss-ffceefc081d1
 # this is the derivative of binary cross -> softmax with respect to its input 
-def dcost_dz_output_np(predicted, actual):
-	return predicted - actual
+def dcost_dz_output_np(predicted, actual, previous_softmax_x, loss_type):
+	if loss_type == "binaryCrossEntropy":
+		return predicted - actual
+	if loss_type == "MSE":
+		# c = MSE function
+		# a = softmax
+		# dc/dz = dc/da * da/dz
+		# dc/da = 2 (predicted - actual)
+		# da/dz = softmax(pre-predicted) * (1 - softmax(pre-predicted))
+		if previous_softmax_x is None:
+			raise ValueError("MSE dcost_dz requested but no previous softmax value is provided")
+		dc_da = mean_sqaured_err_deriv(predicted, actual)
+		da_dz = softmax_deriv(previous_softmax_x)
+		# res = mean_sqaured_err_deriv(predicted, actual).dot(softmax_deriv(previous_softmax_x)) 
+		raise ValueError("unimplemented MSE")
+	else:
+		raise ValueError(f"Invalid loss_type provided {loss_type} @ dcost_dz_output_np")
 
 # https://towardsdatascience.com/deriving-the-backpropagation-equations-from-scratch-part-1-343b300c585a
 # partial derivation of cost function loss against weight of output layer

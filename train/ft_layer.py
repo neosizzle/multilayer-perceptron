@@ -50,6 +50,11 @@ class Ft_layer:
 		# NOTE: This is a np.array
 		self.pending_bias_derivatives = np.zeros(self.bias.shape)
 
+		# This is to store the z value for softmax layers since 
+		# reversing softmax is too complicated for this task.
+		# NOTE: This is only relevant for layers which has the softmax activation function
+		self.pre_softmax_x_values = None
+
 		# This is to store the previous weight derivatives for momentum calculation 
 		# NOTE: This is a np.array
 		self.weights_velocity = np.zeros(self.weights.shape)
@@ -66,10 +71,6 @@ class Ft_layer:
 		# NOTE: This is a np.array
 		self.s_bias = np.zeros(self.bias.shape)
 
-		# This is to store the projected weight derivatives for momentum calculation 
-		# NOTE: This is a np.array
-		# self.projected_weights_derivatives = np.zeros(self.weights.shape)
-
 	# runs activation functions for current layer, and sets the next layers activation function output
 	def run_activation(self):
 		x_values = np.add(np.dot(self.weights, self.lhs_activation), self.bias)
@@ -81,6 +82,8 @@ class Ft_layer:
 		elif self.activation_fn == "softmax":
 			if self.type != "output":
 				raise ValueError("Layer is not output type but softmax is requested")
+			# remember to store the x_values here
+			self.pre_softmax_x_values = x_values
 			activated_output = np.array(ft_math.softmax(x_values))
 		else :
 			raise ValueError(f"Invalid activation function {self.activation_fn}")

@@ -267,7 +267,8 @@ class Ft_perceptron:
 		for layer_idx, layer in enumerate(reversed(self.layers)):
 			# logging.info(f"running backprop for layer {layer.type} @ {idx}")
 			if layer.type == "output":
-				dz = ft_math.dcost_dz_output_np(layer.rhs_activation, truth)
+				# test = ft_math.softmax
+				dz = ft_math.dcost_dz_output_np(layer.rhs_activation, truth, layer.pre_softmax_x_values, self.output_loss_type)
 				dw = ft_math.dcost_dw_output_np(dz, layer.lhs_activation)
 				db = ft_math.dcost_db_output_np(dz)
 				layer.pending_weights_derivatives = dw
