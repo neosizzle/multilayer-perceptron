@@ -86,8 +86,7 @@ def dcost_dz_output_np(predicted, actual, previous_softmax_x, loss_type):
 			raise ValueError("MSE dcost_dz requested but no previous softmax value is provided")
 		dc_da = mean_sqaured_err_deriv(predicted, actual)
 		da_dz = softmax_deriv(previous_softmax_x)
-		# res = mean_sqaured_err_deriv(predicted, actual).dot(softmax_deriv(previous_softmax_x)) 
-		raise ValueError("unimplemented MSE")
+		return dc_da * da_dz
 	else:
 		raise ValueError(f"Invalid loss_type provided {loss_type} @ dcost_dz_output_np")
 
