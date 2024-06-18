@@ -1,26 +1,30 @@
 import sys
 import os
-import traceback
 
 sys.path.insert(0, os.path.abspath('ft_model'))
 
 import argparse
 import coloredlogs, logging
+import traceback
+import time
+
 import ft_preprocess
 import ft_perception
-
-import math
+import ft_reporter
 import ft_math
+import math
 
 def get_args():
+	script_dir = os.path.dirname(os.path.abspath(__file__))
+
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-v', '--verbose', action='store_true')
-	# TODO: make sure hidden laters >= 3
+	# TODO: make sure hidden layers >= 3
 	parser.add_argument('-l', '--layer', help="Speficy number of nodes for each layer", nargs='*', type=int, default=[10, 10, 10])
 	parser.add_argument('-e', '--epochs', help="Speficy number of Epochs to run", type=int, default=10)
-	# parser.add_argument('-l', '--layer', help="Speficy number of nodes for each layer", nargs='*', type=int, default=[24, 24, 24])
-	# parser.add_argument('-e', '--epochs', help="Speficy number of Epochs to run", type=int, default=84)
 	parser.add_argument('-L', '--loss', help="Speficy type of loss function used at output layer", type=str, default='binaryCrossEntropy', choices=['binaryCrossEntropy', 'MSE'])
+	parser.add_argument('-H', '--historic_path', help="Speficy the path of the folder to store historics of this training session", type=str, default=f'{script_dir}/historics/{round(time.time() * 1000)}')
+	parser.add_argument('-o', '--output', help="Speficy the path of the folder to store weights of this training session", type=str, default=f'{script_dir}/weights/')
 	parser.add_argument('-b', '--batch_size', help="Speficy number of nodes in 1 batch for mini batch GD", type=int, default=-1)
 	parser.add_argument('-a', '--learning_rate', help="Speficy the learning rate for GD", type=float, default=0.0314)
 	parser.add_argument('train_dataset', nargs=1)
@@ -54,6 +58,7 @@ def main():
 	logging.info("Train and test dataset standardize")
 	logging.debug(f"mean_and_stddev_train : {mean_and_stddev_train}")
 
+	reporter = ft_reporter.Ft_reporter(args.historic_path)
 
 	perceptron = ft_perception.Ft_perceptron(
 		args.layer,
@@ -61,8 +66,12 @@ def main():
 		args.loss,
 		args.batch_size,
 		args.learning_rate,
+		args.output,
+		min_max_weights_train,
+		mean_and_stddev_train,
 		raw_data_train,
-		raw_data_test
+		raw_data_test,
+		reporter
 	)
 
 	try:

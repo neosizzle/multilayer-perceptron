@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.abspath('ft_model'))
 
 import numpy as np
 import logging
+import json
 import ft_model, ft_layer, ft_math
 import random
 
@@ -15,12 +16,21 @@ class Ft_perceptron:
 			  output_loss_type,
 			  batch_size,
 			  learning_rate,
+			  output,
+			  norm_weights,
+			  stand_weights,
 			  dataset_train,
 			  dataset_test,
+			  reporter,
 			  momentum_decay = 0.5,
 			  rmsprop_ratio = 0.999,
 			  rmsprop_stabilizer = 10 ** -8,
 			  ):
+		self.output_path = output
+		self.norm_weights = norm_weights
+		self.stand_weights = stand_weights
+		self.reporter = reporter
+		self.hidden_layers = hidden_layers
 		self.epoch_count = epoch_count
 		self.output_loss_type = output_loss_type
 		self.batch_size = batch_size
@@ -94,6 +104,29 @@ class Ft_perceptron:
 
 		# store historic data here?
 		logging.info("Perceptron initialized")
+
+	def write_to_output(self):
+		if not os.path.isdir(self.output_path):
+			os.mkdir(self.output_path)
+
+		weights = {}
+		biases = {}
+		config = {
+			'hidden_layers': self.hidden_layers,
+			"input_nodes": len(self.enum_models),
+			"output_noddes": 2,
+			"norm_weights": self.norm_weights,
+			"stand_weights": self.stand_weights
+		}
+		for layer_idx, layer in enumerate(self.layers):
+			weights[f"layer_{layer_idx}"] = layer.weights
+			biases[f"layer_{layer_idx}"] = layer.bias
+			
+		np.savez(f"{self.output_path}/weights", weights)
+		np.savez(f"{self.output_path}/bias", biases)
+		with open(f'{self.output_path}/config.json', 'w') as f:
+			# Write the dictionary to the file in JSON format
+			json.dump(config, f)
 
 	def generate_input_matrix(self, dataset):
 		# fill input data
@@ -232,6 +265,10 @@ class Ft_perceptron:
 
 			test_error = np.abs(np.mean(last_layer_error_test))
 			train_error = np.abs(np.mean(last_layer_error_train))
+
+			self.reporter.report_event("train", train_error, accuracy_train, recall_train)
+			self.reporter.report_event("test", test_error, accuracy_test, recall_test)
+
 			# check for early stopping
 			if i >= warmup_threshold :
 				if accuracy_test < last_test_accuracy:
@@ -242,6 +279,12 @@ class Ft_perceptron:
 			# apply weight changes
 			self.apply_derivatives_reset_cache()
 			logging.info(f"Epoch {i} finished; train loss {round(train_error, 3)}, validation loss {round(test_error, 3)} validation acc {round(accuracy_test, 3)}")
+
+		self.reporter.generate_report()
+		logging.info("Historic report generated")
+
+		self.write_to_output()
+		logging.info("Weights written")
 
 	def feed_forward(self):
 		# iterate through all layers (assume input layer LHS is already set)
