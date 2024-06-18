@@ -45,16 +45,14 @@ def main():
 		logging.error(traceback.format_exc())
 		return
 	min_max_weights_train = ft_preprocess.normalize_features(raw_data_train)
-	min_max_weights_test = ft_preprocess.normalize_features(raw_data_test)
+	ft_preprocess.normalize_wtith_weights(raw_data_test, min_max_weights_train)
 	logging.info("Train and test dataset normalized")
 	logging.debug(f"min_max_weights_train : {min_max_weights_train}")
-	logging.debug(f"min_max_weights_test : {min_max_weights_test}")
 	
 	mean_and_stddev_train = ft_preprocess.standardize_features(raw_data_train)
-	mean_and_stddev_test = ft_preprocess.standardize_features(raw_data_test)
-	logging.info("Train and test dataset standatdized")
+	ft_preprocess.standardize_with_weights(raw_data_test, mean_and_stddev_train)
+	logging.info("Train and test dataset standardize")
 	logging.debug(f"mean_and_stddev_train : {mean_and_stddev_train}")
-	logging.debug(f"mean_and_stddev_test : {mean_and_stddev_test}")
 
 
 	perceptron = ft_perception.Ft_perceptron(

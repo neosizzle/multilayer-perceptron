@@ -81,6 +81,27 @@ def normalize_features(raw_data):
 
 	return min_max_arr
 	
+# given raw data and pre-calculated weights, normalize all the features
+def normalize_wtith_weights(raw_data, weights):
+	for entry in raw_data:
+		for feature in ft_model.get_enumerable_models():
+			weight = weights[feature['idx']]
+			min_weight = weight[0]
+			max_weight = weight[1]
+			feature_name = feature["name"]
+			feature_value = entry.get_feature(feature_name)
+			new_feature_value = (feature_value - min_weight) / (max_weight - min_weight)
+			entry.set_feature(feature_name, new_feature_value)
+
+def standardize_with_weights(raw_data, weights):
+	for entry in raw_data:
+		for feature in ft_model.get_enumerable_models():
+			mean = weights[0][feature['idx']]
+			stdev = weights[1][feature['idx']]
+			feature_name = feature["name"]
+			feature_value = entry.get_feature(feature_name)
+			new_feature_value = (feature_value - mean) / stdev
+			entry.set_feature(feature_name, new_feature_value)
 # returns [means all features, standard deviations all features]
 def standardize_features(raw_data):
 	feature_arr = []
