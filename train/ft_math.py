@@ -136,6 +136,21 @@ def get_accuracy(predicted, actual):
 				correct_elements += 1
 	return correct_elements / total_elements
 
+# calculate the recall stat of a predicted result
+def get_recall(predicted, actual):
+	true_positives = 0
+	false_negatives = 0
+	for row_idx, row in enumerate(predicted):
+		for col_idx, col in enumerate(row):
+			actual_elem = actual[row_idx][col_idx]
+			predicted_elem = col
+			if actual_elem == 1:
+				if predicted_elem > 0.5 :
+					true_positives += 1
+				else :
+					false_negatives += 1
+	return true_positives / (true_positives + false_negatives)
+
 ###### NUMPY UTILS #######
 def single_column_to_scalar(np_arr):
 	res = []

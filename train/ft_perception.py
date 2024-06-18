@@ -222,11 +222,13 @@ class Ft_perceptron:
 			self.layers[0].lhs_activation = self.generate_input_matrix(train_batches)
 			last_layer_error_train = self.feed_forward_and_backprop_train(train_batch_truths)
 			accuracy_train = ft_math.get_accuracy(self.layers[-1].rhs_activation, train_batch_truths)
+			recall_train = ft_math.get_recall(self.layers[-1].rhs_activation, train_batch_truths)
 
 			# # forwardfeed and backpropagate test set
 			self.layers[0].lhs_activation = self.generate_input_matrix(self.dataset_test)
 			last_layer_error_test = self.feed_forward_test(truth_test)
 			accuracy_test = ft_math.get_accuracy(self.layers[-1].rhs_activation, truth_test)
+			recall_test = ft_math.get_recall(self.layers[-1].rhs_activation, truth_test)
 
 			test_error = np.abs(np.mean(last_layer_error_test))
 			train_error = np.abs(np.mean(last_layer_error_train))
