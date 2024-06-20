@@ -24,6 +24,7 @@ def get_args():
 	parser.add_argument('-e', '--epochs', help="Speficy number of Epochs to run", type=int, default=10)
 	parser.add_argument('-L', '--loss', help="Speficy type of loss function used at output layer", type=str, default='binaryCrossEntropy', choices=['binaryCrossEntropy', 'MSE'])
 	parser.add_argument('-H', '--historic_path', help="Speficy the path of the folder to store historics of this training session", type=str, default=f'{script_dir}/historics/{round(time.time() * 1000)}')
+	parser.add_argument('-Hn', '--historic_name', help="Speficy the name of the historic files of this training session", type=str, default=f'')
 	parser.add_argument('-o', '--output', help="Speficy the path of the folder to store weights of this training session", type=str, default=f'{script_dir}/weights/')
 	parser.add_argument('-b', '--batch_size', help="Speficy number of nodes in 1 batch for mini batch GD", type=int, default=-1)
 	parser.add_argument('-a', '--learning_rate', help="Speficy the learning rate for GD", type=float, default=0.0314)
@@ -58,7 +59,7 @@ def main():
 	logging.info("Train and test dataset standardize")
 	logging.debug(f"mean_and_stddev_train : {mean_and_stddev_train}")
 
-	reporter = ft_reporter.Ft_reporter(args.historic_path)
+	reporter = ft_reporter.Ft_reporter(args.historic_path, args.historic_name)
 
 	perceptron = ft_perception.Ft_perceptron(
 		args.layer,

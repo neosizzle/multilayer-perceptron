@@ -14,9 +14,11 @@ import ft_math
 # 1 row represents 1 event. The total historic may contain many rows
 class Ft_reporter:
 	def __init__(self,
-				historic_path
+				historic_path,
+				historic_name
 			  ):
 		self.historic_path = historic_path
+		self.historic_name = historic_name
 		self.train_events = None
 		self.test_events = None
 
@@ -42,6 +44,8 @@ class Ft_reporter:
 		if not os.path.isdir(self.historic_path):
 			os.mkdir(self.historic_path)
 	
-		curr_time = round(time.time() * 1000)
-		np.save(f"{self.historic_path}/{curr_time}_train.npy", self.train_events)
-		np.save(f"{self.historic_path}/{curr_time}_test.npy", self.test_events)
+		name = round(time.time() * 1000)
+		if self.historic_name != "" :
+			name = self.historic_name
+		np.save(f"{self.historic_path}/{name}_train.npy", self.train_events)
+		np.save(f"{self.historic_path}/{name}_test.npy", self.test_events)
