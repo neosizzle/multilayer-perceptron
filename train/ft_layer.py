@@ -20,14 +20,14 @@ class Ft_layer:
 		# rng = np.random.default_rng()
 		rng = np.random.default_rng(seed)
 		
-		if init_bias != None:
-			self.bias = np.array(init_bias)
+		if init_bias is not None:
+			self.bias = init_bias
 		else:
 			# self.bias = rng.normal(size=(node_count_rhs, 1))
 			self.bias = np.zeros((node_count_rhs, 1))
 		
-		if init_weights != None:
-			self.weights = np.array(init_weights)
+		if init_weights is not None:
+			self.weights = init_weights
 		else:
 			self.weights = rng.normal(size=(node_count_rhs, node_count_lhs))
 			# logging.info(rng.random((node_count_rhs, node_count_lhs)))

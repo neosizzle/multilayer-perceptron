@@ -25,6 +25,8 @@ class Ft_perceptron:
 			  momentum_decay = 0.5,
 			  rmsprop_ratio = 0.999,
 			  rmsprop_stabilizer = 10 ** -8,
+			  init_weights_list = [],
+			  init_bias_list = [],
 			  ):
 		self.output_path = output
 		self.norm_weights = norm_weights
@@ -49,7 +51,9 @@ class Ft_perceptron:
 			type="input",
 			node_count_lhs=len(self.enum_models),
 			node_count_rhs=hidden_layers[0],
-			seed=132
+			seed=132,
+			init_bias=None if len(init_bias_list) == 0 else init_bias_list[0],
+			init_weights=None if len(init_weights_list) == 0 else init_weights_list[0]
 		))
 
 		# generate hidden layers
@@ -59,7 +63,9 @@ class Ft_perceptron:
 				type="hidden",
 				node_count_lhs=hidden_layers[i],
 				node_count_rhs=hidden_layers[i + 1],
-				seed= i + 1 * 2
+				seed= i + 1 * 2,
+				init_bias= None if len(init_bias_list) == 0 else init_bias_list[i + 1],
+				init_weights= None if len(init_weights_list) == 0 else init_weights_list[i + 1]
 			))
 			i += 1
 
@@ -69,7 +75,9 @@ class Ft_perceptron:
 			node_count_lhs=hidden_layers[-1],
 			node_count_rhs=len(ft_model.DIAGNOSIS),
 			activation_fn="softmax",
-			seed=i * 2
+			seed=i * 2,
+			init_bias=None if len(init_bias_list) == 0 else init_bias_list[-1],
+			init_weights=None if len(init_weights_list) == 0 else init_weights_list[-1]
 		))
 
 		# generate true values for each training data
@@ -102,7 +110,6 @@ class Ft_perceptron:
 
 		self.test_truth = np.array(test_truth).T
 
-		# store historic data here?
 		logging.info("Perceptron initialized")
 
 	def write_to_output(self):
@@ -115,6 +122,7 @@ class Ft_perceptron:
 			'hidden_layers': self.hidden_layers,
 			"input_nodes": len(self.enum_models),
 			"output_noddes": 2,
+			"loss_type": self.output_loss_type,
 			"norm_weights": self.norm_weights,
 			"stand_weights": self.stand_weights
 		}
@@ -223,6 +231,19 @@ class Ft_perceptron:
 			self.layers[1].weights = self.layers[1].weights - learning_rate * dw2
 			self.layers[1].bias = self.layers[1].bias - learning_rate * db2
 
+	def begin_predict(self):
+		truth_test = self.test_truth
+		logging.info(f"Testing begin")
+
+		# forwardfeed test set
+		self.layers[0].lhs_activation = self.generate_input_matrix(self.dataset_test)
+		last_layer_error_test = self.feed_forward_test(truth_test)
+		accuracy_test = ft_math.get_accuracy(self.layers[-1].rhs_activation, truth_test)
+		
+		logging.info(f"accuracy {accuracy_test}")
+		logging.debug(f"error {last_layer_error_test}")
+		logging.debug(f"truth\n{truth_test.astype(float)}\n\npredicted\n{np.rint(self.layers[-1].rhs_activation)}")
+
 	def begin_train(self):
 		truth_train = self.train_truth
 		truth_test = self.test_truth
@@ -232,7 +253,6 @@ class Ft_perceptron:
 		logging.info(f"Training begin with {warmup_threshold} early stop warmup epochs")
 		random.seed(69)
 		for i in range(self.epoch_count):
-			# TODO: implement Recall metric alongside loss
 			# generate batch randomly based on batch size
 			indices = None
 			if self.batch_size < 0:
@@ -257,7 +277,7 @@ class Ft_perceptron:
 			accuracy_train = ft_math.get_accuracy(self.layers[-1].rhs_activation, train_batch_truths)
 			recall_train = ft_math.get_recall(self.layers[-1].rhs_activation, train_batch_truths)
 
-			# # forwardfeed and backpropagate test set
+			# forwardfeed test set
 			self.layers[0].lhs_activation = self.generate_input_matrix(self.dataset_test)
 			last_layer_error_test = self.feed_forward_test(truth_test)
 			accuracy_test = ft_math.get_accuracy(self.layers[-1].rhs_activation, truth_test)

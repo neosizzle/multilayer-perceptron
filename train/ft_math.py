@@ -130,6 +130,7 @@ def get_accuracy(predicted, actual):
 	for row_idx, row in enumerate(predicted):
 		for col_idx, col in enumerate(row):
 			actual_elem = actual[row_idx][col_idx]
+			# print(f"actual {actual_elem}, col {col}")
 			if actual_elem == 1 and col >= 0.5:
 				correct_elements += 1
 			if actual_elem == 0 and col < 0.5:
