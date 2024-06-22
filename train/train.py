@@ -11,15 +11,12 @@ import time
 import ft_preprocess
 import ft_perception
 import ft_reporter
-import ft_math
-import math
 
 def get_args():
 	script_dir = os.path.dirname(os.path.abspath(__file__))
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-v', '--verbose', action='store_true')
-	# TODO: make sure hidden layers >= 3
 	parser.add_argument('-l', '--layer', help="Speficy number of nodes for each layer", nargs='*', type=int, default=[10, 10, 10])
 	parser.add_argument('-e', '--epochs', help="Speficy number of Epochs to run", type=int, default=10)
 	parser.add_argument('-L', '--loss', help="Speficy type of loss function used at output layer", type=str, default='binaryCrossEntropy', choices=['binaryCrossEntropy', 'MSE'])
@@ -76,20 +73,10 @@ def main():
 	)
 
 	try:
-		# i = 0
-		# predicted = 0.99
-		# actual = 0
-		# while i < 100 :
-		# 	loss = ft_math.binary_cross_entropy([predicted], [actual])
-		# 	# 
-		# 	logging.info(f"pred {predicted} actual {actual} loss: {loss} deriv {ft_math.binary_cross_entropy_deriv_activation(predicted, actual)}")
-		# 	predicted -= 0.01
-		# 	i += 1
 		perceptron.begin_train()
-		# perceptron.begin_train_alt()
 
 	except Exception as e:
 		logging.error(f"begin_train: {e}")
-		logging.error(traceback.format_exc())
+		# logging.error(traceback.format_exc())
 		return
 main()
