@@ -48,6 +48,10 @@ The entire learning process is a 3-step procedure.
 
 Once the learning is done you may use the same weights and biases from the training process to predict new data.
 
+This model is mainly used for data which are non linearly seperable 
+![image](https://github.com/user-attachments/assets/a9bd5ccb-6837-4f22-a489-bae540d2b748)
+
+
 ## Activation function
 Deactivation function is the same for all MLPs. It takes the sum of all this inputs, apply a sigmoid function to it and return the output. The individual inputs may be multiplied with a constant (weight) and the sum may also add or subtract on arbitrary value prior to the sigmoid (bias).
 
